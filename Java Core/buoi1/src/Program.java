@@ -1,6 +1,16 @@
 import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
+import java.util.Scanner;
+import java.util.Random;
 
 public class Program {
+    static Account[] accounts = new Account[5];
+    static Department[] departments = new Department[3];
+    static Group[] groups = new Group[4];
+    static GroupAccount[] groupAccounts = new GroupAccount[10];
+    static Exam[] exams = new Exam[3];
+    
     public static void main(String[] args) {
         // ===== Department =====
         Department dept1 = new Department();
