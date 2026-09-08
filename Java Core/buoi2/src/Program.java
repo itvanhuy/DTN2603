@@ -52,12 +52,11 @@ public class Program {
 
         Department[] departments = { dept1, dept2, dept3 };
 
-        // Gán phòng ban cho account (dùng departmentId)
-        acc1.departmentId = 1; // Sales
-        acc2.departmentId = 2; // Marketing
-        acc3.departmentId = 3; // IT
+        
+        acc1.departmentId = 1; 
+        acc2.departmentId = 2; 
+        acc3.departmentId = 3; 
 
-        // acc2 tham gia 2 group (Java Fresher, C# Fresher)
         int acc2GroupCount = 2;
 
         // Tạo Exam
