@@ -1,8 +1,7 @@
 package backend;
 
-import backend.DatabaseConnection;
-import backend.IQLDepartment;
 import entity.Department;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,29 +16,30 @@ public class QLDepartment implements IQLDepartment {
     @Override
     public List<Department> getAllDepartments() {
         List<Department> departments = new ArrayList<>();
-        String query = "SELECT * FROM department ORDER BY department_id";
+        String sql = "SELECT * FROM department";
 
-        try (Statement stmt = connection.createStatement();
-             ResultSet rs = stmt.executeQuery(query)) {
-
+        try (Statement stmt = connection.createStatement()) {
+            ResultSet rs = stmt.executeQuery(sql);
             while (rs.next()) {
-                Department dept = new Department();
-                dept.setDepartmentId(rs.getInt("department_id"));
-                dept.setDepartmentName(rs.getString("department_name"));
-                departments.add(dept);
+                departments.add(new Department(
+                        rs.getInt("department_id"),
+                        rs.getString("department_name")
+                ));
             }
         } catch (SQLException e) {
-            System.err.println("Loi lay danh sach department: " + e.getMessage());
+            System.out.println("Loi: " + e.getMessage());
         }
+
         return departments;
     }
 
     @Override
     public Department getDepartmentById(int id) {
-        String query = "SELECT * FROM department WHERE department_id = ?";
-        try (PreparedStatement pstmt = connection.prepareStatement(query)) {
-            pstmt.setInt(1, id);
-            ResultSet rs = pstmt.executeQuery();
+        String sql = "SELECT * FROM department WHERE department_id = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
                 return new Department(
@@ -48,44 +48,48 @@ public class QLDepartment implements IQLDepartment {
                 );
             }
         } catch (SQLException e) {
-            System.err.println("Loi lay department theo id: " + e.getMessage());
+            System.out.println("Loi: " + e.getMessage());
         }
+
         return null;
     }
 
     @Override
     public boolean addDepartment(Department department) {
-        String query = "INSERT INTO department (department_name) VALUES (?)";
-        try (PreparedStatement pstmt = connection.prepareStatement(query)) {
-            pstmt.setString(1, department.getDepartmentName());
-            return pstmt.executeUpdate() > 0;
+        String sql = "INSERT INTO department (department_name) VALUES (?)";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, department.getDepartmentName());
+            return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("Loi them department: " + e.getMessage());
+            System.out.println("Loi: " + e.getMessage());
             return false;
         }
     }
 
     @Override
     public boolean updateDepartment(Department department) {
-        String query = "UPDATE department SET department_name=? WHERE department_id=?";
-        try (PreparedStatement pstmt = connection.prepareStatement(query)) {
-            pstmt.setString(1, department.getDepartmentName());
-            pstmt.setInt(2, department.getDepartmentId());
-            return pstmt.executeUpdate() > 0;
+        String sql = "UPDATE department SET department_name=? WHERE department_id=?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, department.getDepartmentName());
+            stmt.setInt(2, department.getDepartmentId());
+            return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("Loi cap nhat department: " + e.getMessage());
+            System.out.println("Loi: " + e.getMessage());
             return false;
         }
     }
 
     @Override
     public boolean deleteDepartment(int id) {
-        String query = "DELETE FROM department WHERE department_id = ?";
-        try (PreparedStatement pstmt = connection.prepareStatement(query)) {
-            pstmt.setInt(1, id);
-            return pstmt.executeUpdate() > 0;
+        String sql = "DELETE FROM department WHERE department_id = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("Loi xoa department: " + e.getMessage());
+            System.out.println("Loi: " + e.getMessage());
             return false;
         }
     }
@@ -94,18 +98,14 @@ public class QLDepartment implements IQLDepartment {
     public void displayDepartmentsAsTable() {
         List<Department> departments = getAllDepartments();
         if (departments.isEmpty()) {
-            System.out.println("Khong co department nao.");
+            System.out.println("Khong co du lieu.");
             return;
         }
 
-        System.out.println("\n" + "=".repeat(40));
-        System.out.printf("| %-4s | %-30s |%n", "ID", "Department Name");
-        System.out.println("=".repeat(40));
+        System.out.println("\nID\tDepartment Name");
 
         for (Department dept : departments) {
-            System.out.println(dept);
+            System.out.println(dept.getDepartmentId() + "\t" + dept.getDepartmentName());
         }
-        System.out.println("=".repeat(40));
-        System.out.println("Tong so department: " + departments.size());
     }
 }

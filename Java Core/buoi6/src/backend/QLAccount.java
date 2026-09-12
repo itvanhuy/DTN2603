@@ -1,7 +1,5 @@
 package backend;
 
-import backend.DatabaseConnection;
-import backend.IQLAccount;
 import entity.Account;
 
 import java.sql.*;
@@ -18,34 +16,35 @@ public class QLAccount implements IQLAccount {
     @Override
     public List<Account> getAllAccounts() {
         List<Account> accounts = new ArrayList<>();
-        String query = "SELECT * FROM account";
+        String sql = "SELECT * FROM account";
 
-        try (Statement stmt = connection.createStatement();
-             ResultSet rs = stmt.executeQuery(query)) {
-
+        try (Statement stmt = connection.createStatement()) {
+            ResultSet rs = stmt.executeQuery(sql);
             while (rs.next()) {
-                Account account = new Account();
-                account.setAccountId(rs.getInt("account_id"));
-                account.setEmail(rs.getString("email"));
-                account.setUsername(rs.getString("username"));
-                account.setFullname(rs.getString("fullname"));
-                account.setDepartmentId(rs.getInt("department_id"));
-                account.setPositionId(rs.getInt("position_id"));
-                account.setCreateDate(rs.getDate("create_date"));
-                accounts.add(account);
+                accounts.add(new Account(
+                        rs.getInt("account_id"),
+                        rs.getString("email"),
+                        rs.getString("username"),
+                        rs.getString("fullname"),
+                        rs.getInt("department_id"),
+                        rs.getInt("position_id"),
+                        rs.getDate("create_date")
+                ));
             }
         } catch (SQLException e) {
-            System.err.println("Loi lay danh sach account: " + e.getMessage());
+            System.out.println("Loi: " + e.getMessage());
         }
+
         return accounts;
     }
 
     @Override
     public Account getAccountById(int id) {
-        String query = "SELECT * FROM account WHERE account_id = ?";
-        try (PreparedStatement pstmt = connection.prepareStatement(query)) {
-            pstmt.setInt(1, id);
-            ResultSet rs = pstmt.executeQuery();
+        String sql = "SELECT * FROM account WHERE account_id = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
                 return new Account(
@@ -59,52 +58,59 @@ public class QLAccount implements IQLAccount {
                 );
             }
         } catch (SQLException e) {
-            System.err.println("Loi lay account theo id: " + e.getMessage());
+            System.out.println("Loi: " + e.getMessage());
         }
+
         return null;
     }
 
     @Override
     public boolean addAccount(Account account) {
-        String query = "INSERT INTO account (email, username, fullname, department_id, position_id) VALUES (?, ?, ?, ?, ?)";
-        try (PreparedStatement pstmt = connection.prepareStatement(query)) {
-            pstmt.setString(1, account.getEmail());
-            pstmt.setString(2, account.getUsername());
-            pstmt.setString(3, account.getFullname());
-            pstmt.setInt(4, account.getDepartmentId());
-            pstmt.setInt(5, account.getPositionId());
-            return pstmt.executeUpdate() > 0;
+        String sql = "INSERT INTO account "
+                + "(email, username, fullname, department_id, position_id) "
+                + "VALUES (?, ?, ?, ?, ?)";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, account.getEmail());
+            stmt.setString(2, account.getUsername());
+            stmt.setString(3, account.getFullname());
+            stmt.setInt(4, account.getDepartmentId());
+            stmt.setInt(5, account.getPositionId());
+            return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("Loi them account: " + e.getMessage());
+            System.out.println("Loi: " + e.getMessage());
             return false;
         }
     }
 
     @Override
     public boolean updateAccount(Account account) {
-        String query = "UPDATE account SET email=?, username=?, fullname=?, department_id=?, position_id=? WHERE account_id=?";
-        try (PreparedStatement pstmt = connection.prepareStatement(query)) {
-            pstmt.setString(1, account.getEmail());
-            pstmt.setString(2, account.getUsername());
-            pstmt.setString(3, account.getFullname());
-            pstmt.setInt(4, account.getDepartmentId());
-            pstmt.setInt(5, account.getPositionId());
-            pstmt.setInt(6, account.getAccountId());
-            return pstmt.executeUpdate() > 0;
+        String sql = "UPDATE account SET email=?, username=?, fullname=?, "
+                + "department_id=?, position_id=? WHERE account_id=?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, account.getEmail());
+            stmt.setString(2, account.getUsername());
+            stmt.setString(3, account.getFullname());
+            stmt.setInt(4, account.getDepartmentId());
+            stmt.setInt(5, account.getPositionId());
+            stmt.setInt(6, account.getAccountId());
+            return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("Loi cap nhat account: " + e.getMessage());
+            System.out.println("Loi: " + e.getMessage());
             return false;
         }
     }
 
     @Override
     public boolean deleteAccount(int id) {
-        String query = "DELETE FROM account WHERE account_id = ?";
-        try (PreparedStatement pstmt = connection.prepareStatement(query)) {
-            pstmt.setInt(1, id);
-            return pstmt.executeUpdate() > 0;
+        String sql = "DELETE FROM account WHERE account_id = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("Loi xoa account: " + e.getMessage());
+            System.out.println("Loi: " + e.getMessage());
             return false;
         }
     }
@@ -113,19 +119,20 @@ public class QLAccount implements IQLAccount {
     public void displayAccountsAsTable() {
         List<Account> accounts = getAllAccounts();
         if (accounts.isEmpty()) {
-            System.out.println("Khong co account nao.");
+            System.out.println("Khong co du lieu.");
             return;
         }
 
-        System.out.println("\n" + "=".repeat(120));
-        System.out.printf("| %-4s | %-25s | %-20s | %-25s | %-8s | %-8s | %-12s |%n",
-                "ID", "Email", "Username", "Fullname", "Dept ID", "Pos ID", "Create Date");
-        System.out.println("=".repeat(120));
+        System.out.println("\nID\tEmail\tUsername\tFullname\tDepartment\tPosition\tCreate Date");
 
         for (Account acc : accounts) {
-            System.out.println(acc);
+            System.out.println(acc.getAccountId() + "\t"
+                    + acc.getEmail() + "\t"
+                    + acc.getUsername() + "\t"
+                    + acc.getFullname() + "\t"
+                    + acc.getDepartmentId() + "\t"
+                    + acc.getPositionId() + "\t"
+                    + acc.getCreateDate());
         }
-        System.out.println("=".repeat(120));
-        System.out.println("Tong so account: " + accounts.size());
     }
 }
