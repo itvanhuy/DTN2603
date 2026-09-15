@@ -1,6 +1,6 @@
 package frontend;
 
-import backend.DatabaseConnection;
+import untils.JDButils;
 import backend.QLAccount;
 import backend.QLDepartment;
 import backend.QLPosition;
@@ -36,7 +36,7 @@ public class Main {
                         break;
                     case 0:
                         System.out.println("\nCam on ban da su dung chuong trinh!");
-                        DatabaseConnection.closeConnection();
+                        JDButils.closeConnection();
                         System.exit(0);
                         break;
                     default:

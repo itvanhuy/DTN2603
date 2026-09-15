@@ -1,6 +1,7 @@
 package backend;
 
 import entity.Position;
+import untils.JDButils;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -10,7 +11,7 @@ public class QLPosition implements IQLPosition {
     private Connection connection;
 
     public QLPosition() {
-        this.connection = DatabaseConnection.getConnection();
+        this.connection = JDButils.getConnection();
     }
 
     @Override

@@ -1,6 +1,7 @@
 package backend;
 
 import entity.Department;
+import untils.JDButils;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -10,7 +11,7 @@ public class QLDepartment implements IQLDepartment {
     private Connection connection;
 
     public QLDepartment() {
-        this.connection = DatabaseConnection.getConnection();
+        this.connection = JDButils.getConnection();
     }
 
     @Override

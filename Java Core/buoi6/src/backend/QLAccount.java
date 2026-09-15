@@ -1,6 +1,7 @@
 package backend;
 
 import entity.Account;
+import untils.JDButils;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -10,7 +11,7 @@ public class QLAccount implements IQLAccount {
     private Connection connection;
 
     public QLAccount() {
-        this.connection = DatabaseConnection.getConnection();
+        this.connection = JDButils.getConnection();
     }
 
     @Override
