@@ -25,10 +25,7 @@ public class DepartmentRepository implements IDepartmentRepository {
             try (PreparedStatement statement = connection.prepareStatement(sql);
                  ResultSet resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
-                    departments.add(new Department(
-                            resultSet.getInt("department_id"),
-                            resultSet.getString("department_name")
-                    ));
+                    departments.add(toDepartment(resultSet));
                 }
             }
         } catch (SQLException e) {
@@ -50,10 +47,7 @@ public class DepartmentRepository implements IDepartmentRepository {
                 statement.setInt(1, id);
                 try (ResultSet resultSet = statement.executeQuery()) {
                     if (resultSet.next()) {
-                        return new Department(
-                                resultSet.getInt("department_id"),
-                                resultSet.getString("department_name")
-                        );
+                        return toDepartment(resultSet);
                     }
                 }
             }
@@ -61,6 +55,13 @@ public class DepartmentRepository implements IDepartmentRepository {
             System.out.println("Lỗi khi tìm department theo ID: " + e.getMessage());
         }
         return null;
+    }
+
+    private Department toDepartment(ResultSet resultSet) throws SQLException {
+        return new Department(
+                resultSet.getInt("department_id"),
+                resultSet.getString("department_name")
+        );
     }
 
     @Override
