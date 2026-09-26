@@ -33,6 +33,10 @@ public class AccountController {
         return accountService.deleteAccount(id);
     }
 
+    public String importCSV(String url) {
+        return accountService.importCSV(url);
+    }
+
     public void displayAccountsAsTable() {
         List<Account> accounts = getAllAccounts();
 

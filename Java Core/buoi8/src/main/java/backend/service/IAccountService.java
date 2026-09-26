@@ -10,4 +10,5 @@ public interface IAccountService {
     boolean addAccount(Account account);
     boolean updateAccount(Account account);
     boolean deleteAccount(int id);
+    String importCSV(String url);
 }
