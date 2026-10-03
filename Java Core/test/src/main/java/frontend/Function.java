@@ -1,395 +1,163 @@
 package frontend;
 
-import backend.controller.AccountController;
-import backend.controller.DepartmentController;
-import backend.controller.PositionController;
-import common.StringCommon;
-import entity.Account;
-import entity.Department;
-import entity.Position;
-import entity.PositionName;
+import backend.controller.ManufacturerController;
+import backend.controller.ProductController;
+import common.EmailValidator;
+import entity.Category;
+import entity.Manufacturer;
+import entity.Product;
 
-import java.util.Locale;
 import java.util.Scanner;
 
 public class Function {
-    private static final int MIN_LENGTH = 6;
-    private static final int MAX_LENGTH = 100;
     private final Scanner scanner = new Scanner(System.in);
-    private final AccountController accountController = new AccountController();
-    private final DepartmentController departmentController = new DepartmentController();
-    private final PositionController positionController = new PositionController();
+    private final ProductController productController = new ProductController();
+    private final ManufacturerController manufacturerController = new ManufacturerController();
 
     public void menu() {
         while (true) {
-            System.out.println("\n=== QUAN LY ACCOUNT ===");
-            System.out.println("1. Hien thi account");
-            System.out.println("2. Tim account theo ID");
-            System.out.println("3. Them account");
-            System.out.println("4. Cap nhat username theo ID");
-            System.out.println("5. Xoa account theo ID");
-            System.out.println("6. Import account tu file CSV");
-            System.out.println("7. Quan ly Department");
-            System.out.println("8. Quan ly Position");
-            System.out.println("0. Thoat");
-            System.out.print("Chon: ");
+            System.out.println("\n=== QUẢN LÝ SẢN PHẨM ===");
+            System.out.println("1. Tìm nhà sản xuất theo ID");
+            System.out.println("2. Hiển thị danh sách sản phẩm");
+            System.out.println("3. Xóa sản phẩm theo ID");
+            System.out.println("4. Cập nhật tên sản phẩm");
+            System.out.println("5. Thêm sản phẩm");
+            System.out.println("6. Kiểm tra email");
+            System.out.println("0. Thoát");
+            System.out.print("Chọn: ");
 
             switch (scanner.nextLine().trim()) {
                 case "1":
-                    accountController.displayAccountsAsTable();
+                    findManufacturer();
                     break;
                 case "2":
-                    findAccount();
+                    productController.displayProducts();
                     break;
                 case "3":
-                    addAccount();
+                    deleteProduct();
                     break;
                 case "4":
-                    updateUsername();
+                    updateProductName();
                     break;
                 case "5":
-                    deleteAccount();
+                    addProduct();
                     break;
                 case "6":
-                    importAccountsFromCsv();
-                    break;
-                case "7":
-                    manageDepartment();
-                    break;
-                case "8":
-                    managePosition();
+                    checkEmail();
                     break;
                 case "0":
                     return;
                 default:
-                    System.out.println("Lua chon khong hop le.");
+                    System.out.println("Lựa chọn không hợp lệ.");
             }
         }
     }
 
-    private void addAccount() {
-        Account account = new Account();
-        account.setUsername(readUsername("Username: "));
-        account.setEmail(readEmail("Email: "));
-        account.setFullName(readFullName("Fullname: "));
-        account.setDepartment(new Department(readPositiveId("Department ID: "), ""));
-        account.setPosition(new Position(readPositiveId("Position ID: "), PositionName.DEV));
+    public static boolean isValidEmail(String email) {
+        return EmailValidator.isValid(email);
+    }
 
-        if (accountController.addAccount(account)) {
-            System.out.println("Them account thanh cong.");
+    private void findManufacturer() {
+        int id = readPositiveId("Nhập ID nhà sản xuất: ");
+        Manufacturer manufacturer = manufacturerController.getManufacturerById(id);
+        if (manufacturer == null) {
+            System.out.println("Không tìm thấy nhà sản xuất.");
         } else {
-            System.out.println("Them that bai: username/email trung hoac department/position khong ton tai.");
+            System.out.println("ID: " + manufacturer.getId() + " | Tên: " + manufacturer.getName());
         }
     }
 
-    private void updateUsername() {
-        int id = readPositiveId("Account ID: ");
-        Account account = accountController.getAccountById(id);
-        if (account == null) {
-            System.out.println("Account khong ton tai.");
-            return;
-        }
-
-        account.setUsername(readUsername("Username moi: "));
-        if (accountController.updateAccount(account)) {
-            System.out.println("Cap nhat username thanh cong.");
+    private void deleteProduct() {
+        int id = readPositiveId("Nhập ID sản phẩm cần xóa: ");
+        if (productController.deleteProduct(id)) {
+            System.out.println("Xóa sản phẩm thành công.");
         } else {
-            System.out.println("Cap nhat that bai: username bi trung hoac khong hop le.");
+            System.out.println("Không thể xóa sản phẩm (ID không tồn tại hoặc lỗi cơ sở dữ liệu).");
         }
     }
 
-    private void deleteAccount() {
-        int id = readPositiveId("Account ID: ");
-        System.out.print("Xac nhan xoa (y/n): ");
-        if (!scanner.nextLine().trim().equalsIgnoreCase("y")) {
-            System.out.println("Da huy thao tac.");
-            return;
-        }
-
-        if (accountController.deleteAccount(id)) {
-            System.out.println("Xoa account thanh cong.");
+    private void updateProductName() {
+        int id = readPositiveId("Nhập ID sản phẩm cần cập nhật: ");
+        String name = readRequiredText("Tên sản phẩm mới: ");
+        if (productController.updateProductName(id, name)) {
+            System.out.println("Cập nhật tên sản phẩm thành công.");
         } else {
-            System.out.println("Xoa that bai: account khong ton tai.");
+            System.out.println("Không thể cập nhật (ID không tồn tại, tên bị trùng hoặc không hợp lệ).");
         }
     }
 
-    private void findAccount() {
-        Account account = accountController.getAccountById(readPositiveId("Account ID: "));
-        if (account == null) {
-            System.out.println("Account khong ton tai.");
+    private void addProduct() {
+        Product product = new Product();
+        product.setName(readRequiredText("Tên sản phẩm: "));
+        product.setPrice(readRequiredText("Giá: "));
+        product.setInfo(readRequiredText("Thông tin ngắn: "));
+        product.setDetail(readOptionalText("Chi tiết sản phẩm (Enter để bỏ qua): "));
+        product.setRatingStar(readRating());
+        product.setImageName(readRequiredText("Tên file ảnh: "));
+        product.setManufacturer(new Manufacturer(readPositiveId("ID nhà sản xuất: "), null));
+        product.setCategory(new Category(readPositiveId("ID danh mục: "), null));
+
+        if (productController.addProduct(product)) {
+            System.out.println("Thêm sản phẩm thành công.");
         } else {
-            System.out.println(account);
+            System.out.println("Không thể thêm: tên có thể bị trùng, dữ liệu không hợp lệ, hoặc ID nhà sản xuất/danh mục không tồn tại.");
         }
     }
 
-    private void importAccountsFromCsv() {
-        System.out.print("Nhap duong dan file CSV: ");
-        String filePath = scanner.nextLine().trim();
-        System.out.println(accountController.importCSV(filePath));
-    }
-
-    private void manageDepartment() {
-        while (true) {
-            System.out.println("\n=== QUAN LY DEPARTMENT ===");
-            System.out.println("1. Hien thi department");
-            System.out.println("2. Tim department theo ID");
-            System.out.println("3. Them department");
-            System.out.println("4. Cap nhat department theo ID");
-            System.out.println("5. Xoa department theo ID");
-            System.out.println("0. Quay lai");
-            System.out.print("Chon: ");
-
-            switch (scanner.nextLine().trim()) {
-                case "1":
-                    departmentController.displayDepartmentsAsTable();
-                    break;
-                case "2":
-                    findDepartment();
-                    break;
-                case "3":
-                    addDepartment();
-                    break;
-                case "4":
-                    updateDepartment();
-                    break;
-                case "5":
-                    deleteDepartment();
-                    break;
-                case "0":
-                    return;
-                default:
-                    System.out.println("Lua chon khong hop le.");
-            }
-        }
-    }
-
-    private void managePosition() {
-        while (true) {
-            System.out.println("\n=== QUAN LY POSITION ===");
-            System.out.println("1. Hien thi position");
-            System.out.println("2. Tim position theo ID");
-            System.out.println("3. Them position");
-            System.out.println("4. Cap nhat position theo ID");
-            System.out.println("5. Xoa position theo ID");
-            System.out.println("0. Quay lai");
-            System.out.print("Chon: ");
-
-            switch (scanner.nextLine().trim()) {
-                case "1":
-                    positionController.displayPositionsAsTable();
-                    break;
-                case "2":
-                    findPosition();
-                    break;
-                case "3":
-                    addPosition();
-                    break;
-                case "4":
-                    updatePosition();
-                    break;
-                case "5":
-                    deletePosition();
-                    break;
-                case "0":
-                    return;
-                default:
-                    System.out.println("Lua chon khong hop le.");
-            }
-        }
-    }
-
-    private void addDepartment() {
-        Department department = new Department();
-        department.setName(readDepartmentName("Department name: "));
-        if (departmentController.addDepartment(department)) {
-            System.out.println("Them department thanh cong.");
-        } else {
-            System.out.println("Them department that bai: ten bi trung hoac khong hop le.");
-        }
-    }
-
-    private void updateDepartment() {
-        int id = readPositiveId("Department ID: ");
-        Department department = departmentController.getDepartmentById(id);
-        if (department == null) {
-            System.out.println("Department khong ton tai.");
-            return;
-        }
-        department.setName(readDepartmentName("Department name moi: "));
-        if (departmentController.updateDepartment(department)) {
-            System.out.println("Cap nhat department thanh cong.");
-        } else {
-            System.out.println("Cap nhat department that bai: ten bi trung hoac khong hop le.");
-        }
-    }
-
-    private void deleteDepartment() {
-        int id = readPositiveId("Department ID: ");
-        System.out.print("Xac nhan xoa (y/n): ");
-        if (!scanner.nextLine().trim().equalsIgnoreCase("y")) {
-            System.out.println("Da huy thao tac.");
-            return;
-        }
-        if (departmentController.deleteDepartment(id)) {
-            System.out.println("Xoa department thanh cong.");
-        } else {
-            System.out.println("Xoa department that bai: department khong ton tai.");
-        }
-    }
-
-    private void findDepartment() {
-        Department department = departmentController.getDepartmentById(readPositiveId("Department ID: "));
-        if (department == null) {
-            System.out.println("Department khong ton tai.");
-        } else {
-            System.out.println(department);
-        }
-    }
-
-    private void addPosition() {
-        Position position = new Position();
-        position.setName(readPositionName("Position name: "));
-        if (positionController.addPosition(position)) {
-            System.out.println("Them position thanh cong.");
-        } else {
-            System.out.println("Them position that bai: vi tri bi trung hoac khong hop le.");
-        }
-    }
-
-    private void updatePosition() {
-        int id = readPositiveId("Position ID: ");
-        Position position = positionController.getPositionById(id);
-        if (position == null) {
-            System.out.println("Position khong ton tai.");
-            return;
-        }
-        position.setName(readPositionName("Position name moi: "));
-        if (positionController.updatePosition(position)) {
-            System.out.println("Cap nhat position thanh cong.");
-        } else {
-            System.out.println("Cap nhat position that bai: vi tri bi trung hoac khong hop le.");
-        }
-    }
-
-    private void deletePosition() {
-        int id = readPositiveId("Position ID: ");
-        System.out.print("Xac nhan xoa (y/n): ");
-        if (!scanner.nextLine().trim().equalsIgnoreCase("y")) {
-            System.out.println("Da huy thao tac.");
-            return;
-        }
-        if (positionController.deletePosition(id)) {
-            System.out.println("Xoa position thanh cong.");
-        } else {
-            System.out.println("Xoa position that bai: position khong ton tai.");
-        }
-    }
-
-    private void findPosition() {
-        Position position = positionController.getPositionById(readPositiveId("Position ID: "));
-        if (position == null) {
-            System.out.println("Position khong ton tai.");
-        } else {
-            System.out.println(position);
-        }
-    }
-
-    private String readUsername(String prompt) {
-        while (true) {
-            System.out.print(prompt);
-            String value = scanner.nextLine().trim();
-            if (isValidUsername(value)) {
-                return value;
-            }
-            System.out.println("Username phai dai hon 6 va ngan hon 100 ky tu.");
-        }
-    }
-
-    private String readEmail(String prompt) {
-        while (true) {
-            System.out.print(prompt);
-            String value = scanner.nextLine().trim();
-            if (isValidEmail(value)) {
-                return value;
-            }
-            System.out.println("Email phai dai hon 6, ngan hon 100 ky tu va co dang example@gmail.com.");
-        }
-    }
-
-    private String readFullName(String prompt) {
-        while (true) {
-            System.out.print(prompt);
-            String value = scanner.nextLine().trim();
-            if (isValidFullName(value)) {
-                return value;
-            }
-            System.out.println("Fullname phai dai hon 6 va ngan hon 100 ky tu.");
-        }
-    }
-
-    private String readDepartmentName(String prompt) {
-        while (true) {
-            System.out.print(prompt);
-            String value = scanner.nextLine().trim();
-            if (value != null && !value.isEmpty() && value.length() >= 2 && value.length() <= 100) {
-                return value;
-            }
-            System.out.println("Department name phai tu 2 den 100 ky tu.");
-        }
-    }
-
-    private PositionName readPositionName(String prompt) {
-        while (true) {
-            System.out.print(prompt);
-            String value = scanner.nextLine().trim();
-            if (value == null || value.isEmpty()) {
-                System.out.println("Position name khong duoc de trong.");
-                continue;
-            }
-            try {
-                String normalized = value.replace('-', '_').replace(' ', '_').toUpperCase(Locale.ROOT);
-                if (normalized.equals("SCRUMMASTER")) {
-                    normalized = "SCRUM_MASTER";
-                }
-                return PositionName.valueOf(normalized);
-            } catch (IllegalArgumentException e) {
-                System.out.println("Position name phai la mot trong: DEV, TEST, PM, SCRUM_MASTER.");
-            }
-        }
+    private void checkEmail() {
+        System.out.print("Nhập email: ");
+        String email = scanner.nextLine().trim();
+        System.out.println(isValidEmail(email) ? "Email hợp lệ." : "Email không hợp lệ.");
     }
 
     private int readPositiveId(String prompt) {
         while (true) {
             System.out.print(prompt);
             try {
-                int value = Integer.parseInt(scanner.nextLine().trim());
-                if (value > 0) {
-                    return value;
+                int id = Integer.parseInt(scanner.nextLine().trim());
+                if (id > 0) {
+                    return id;
                 }
             } catch (NumberFormatException ignored) {
-                // Continue asking until a positive integer is entered.
+                // Ask again until a positive numeric ID is entered.
             }
-            System.out.println("ID phai la so nguyen lon hon 0.");
+            System.out.println("ID phải là số nguyên dương.");
         }
     }
 
-    public static boolean isValidUsername(String username) {
-        return hasValidLength(username);
-    }
-
-    public static boolean isValidEmail(String email) {
-        return hasValidLength(email) && email.trim().matches(StringCommon.EMAIL_REGEX);
-    }
-
-    public static boolean isValidFullName(String fullName) {
-        return hasValidLength(fullName);
-    }
-
-    private static boolean hasValidLength(String value) {
-        if (value == null) {
-            return false;
+    private String readRequiredText(String prompt) {
+        while (true) {
+            System.out.print(prompt);
+            String value = scanner.nextLine().trim();
+            if (!value.isEmpty()) {
+                return value;
+            }
+            System.out.println("Thông tin không được để trống.");
         }
-        int length = value.trim().length();
-        return length > MIN_LENGTH && length < MAX_LENGTH;
+    }
+
+    private String readOptionalText(String prompt) {
+        System.out.print(prompt);
+        String value = scanner.nextLine().trim();
+        return value.isEmpty() ? null : value;
+    }
+
+    private Integer readRating() {
+        while (true) {
+            System.out.print("Số sao đánh giá (0-5, Enter để bỏ qua): ");
+            String input = scanner.nextLine().trim();
+            if (input.isEmpty()) {
+                return null;
+            }
+            try {
+                int rating = Integer.parseInt(input);
+                if (rating >= 0 && rating <= 5) {
+                    return rating;
+                }
+            } catch (NumberFormatException ignored) {
+                // Ask again until a valid rating is entered.
+            }
+            System.out.println("Số sao phải nằm trong khoảng 0 đến 5.");
+        }
     }
 }

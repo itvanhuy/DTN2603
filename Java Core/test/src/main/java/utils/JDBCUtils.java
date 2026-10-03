@@ -2,31 +2,29 @@ package utils;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.SQLException;
 
 public class JDBCUtils {
-    private Connection connection;
-    // hàm kết nối đến DB
-    public static Connection getConnection() {
-        Connection connection = null;
-        String url = "jdbc:mysql://localhost:3306/dtn2603";
-        String username = "root";
-        String password = "123456";
-        try {
-            connection = DriverManager.getConnection(url, username, password);
-        } catch (Exception e) {
-            System.out.println("Kết nối không thành công");
-            e.printStackTrace();
-        }
-        return connection;
+    private static final String URL = System.getenv().getOrDefault(
+            "DB_URL",
+            "jdbc:mysql://localhost:3306/ProductManagement?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+    );
+    private static final String USERNAME = System.getenv().getOrDefault("DB_USER", "root");
+    private static final String PASSWORD = System.getenv().getOrDefault("DB_PASSWORD", "");
+
+    private JDBCUtils() {
     }
 
-    // ngắt kết nối
+    public static Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(URL, USERNAME, PASSWORD);
+    }
+
     public static void closeConnection(Connection connection) {
         if (connection != null) {
             try {
                 connection.close();
-            } catch (Exception e) {
-                e.printStackTrace();
+            } catch (SQLException e) {
+                System.err.println("Không thể đóng kết nối cơ sở dữ liệu: " + e.getMessage());
             }
         }
     }

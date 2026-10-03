@@ -1,12 +1,13 @@
 package entity;
 
-public class Position {
+public class Manufacturer {
     private int id;
-    private PositionName name;
+    private String name;
 
-    public Position() {}
+    public Manufacturer() {
+    }
 
-    public Position(int id, PositionName name) {
+    public Manufacturer(int id, String name) {
         this.id = id;
         this.name = name;
     }
@@ -19,16 +20,16 @@ public class Position {
         this.id = id;
     }
 
-    public PositionName getName() {
+    public String getName() {
         return name;
     }
 
-    public void setName(PositionName name) {
+    public void setName(String name) {
         this.name = name;
     }
 
     @Override
     public String toString() {
-        return String.format("| %-4d | %-15s |", id, name == null ? "" : name.name());
+        return String.format("| %-4d | %-20s |", id, name);
     }
 }
